@@ -1,108 +1,21 @@
-- hosts: wordpress
-  become: yes
-  vars:
-    wordpress_db_name: wpdb
-    wordpress_db_user: wpuser
-    wordpress_db_password: password
-    wordpress_db_prefix: wp_
-    mysql_port: 3306
+#- name: Baseline
+#  hosts: all
+#  tasks:
+#  - 
+- name: Install Wordpress
+  hosts: wordpress_hosts
   tasks:
-    - name: Install LAMP stack
-      apt:
-        name:
-          - apache2
-          - php
-          - libapache2-mod-php
-          - php-mysql
-          - php-gd
-          - php-curl
-          - unzip
-      notify:
-        - Restart Apache
+  - command: "echo $(hostname) is running wordpress!"
 
-    - name: Configure Webroot
-      template:
-        src: "templates/wp-apache.conf"
-        dest: "/etc/apache2/sites-enabled/000-default.conf"
-        owner: root
-        group: root
-      notify:
-        - Restart Apache
-
-    - name: Download WordPress
-      unarchive:
-        src: "https://wordpress.org/latest.zip"
-        dest: "/var/www/html/"
-        remote_src: yes
-        creates: "/var/www/html/wordpress/wp-settings.php"
-
-    - name: Set WordPress directory permissions
-      file:
-        path: "/var/www/html/"
-        mode: 0755
-        owner: www-data
-        group: www-data
-
-    - name: Configure WordPress
-      template:
-        src: "templates/wp-config.php.j2"
-        dest: "/var/www/html/wordpress/wp-config.php"
-        owner: www-data
-        group: www-data
-  handlers:
-    - name: Restart Apache
-      ansible.builtin.service:
-        name: apache2
-        state: restarted
-- hosts: mysql
+- name: Install SQL
+  hosts: sql_hosts
   become: yes
-  vars:
-    wordpress_db_name: wpdb
-    wordpress_db_user: wpuser
-    wordpress_db_password: password
-    mysql_root_password: password
+  ignore_errors: yes
   tasks:
-    - name: Install MySQL server
-      apt:
-        name:
-          - mysql-server
-          - python3-pymysql
-        state: present
-    - name: Set the root password
-      mysql_user:
-        name: root
-        password: "{{ mysql_root_password }}"
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-      tags: [ mysql, mysql-root ]
+  - command: "echo $(hostname) is running sql!"
+  - script: "scripts/mysql.sh"
 
-    - name: Creates database for WordPress
-      mysql_db:
-        name: "{{ wordpress_db_name }}"
-        state: present
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-
-    - name: Configure MySQL user for wordpress
-      mysql_user:
-        name: "{{ wordpress_db_user }}"
-        password: "{{ wordpress_db_password }}"
-        host: "%"
-        priv: "{{ wordpress_db_name }}.*:ALL"
-        state: present
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-
-    - name: Configure MySQL bind address
-      template:
-        src: "templates/mysqld.cnf"
-        dest: "/etc/mysql/mysql.conf.d/mysqld.cnf"
-        owner: root
-        group: root
-      notify:
-        - Restart Mysql
-
-  handlers:
-      - name: Restart Mysql
-        ansible.builtin.service:
-          name: mysql
-          state: restarted
+- name: Install vsftpd
+  hosts: vsftpd_hosts
+  tasks:
+  - command: "echo $(hostname) is running vsftpd!"
