@@ -1,0 +1,4 @@
+- name: Do nothing
+  hosts: nobody
+  tasks:
+  - command: "echo If this is running, something is fucked"
