@@ -258,6 +258,8 @@ Vagrant.configure("2") do |config|
         #Primary Service name
         #Ip address & Hostname of dependency
         ansible.playbook = "emptybook.yml"
+=begin
+The actual inventory, I'm just stress testing
         ansible.groups = 
         {
             "wordpress_hosts" => (allBoxes.select{|o| o.primaryService.name == "wordpress"}.map{ |machine| machine[:hostname] }),
@@ -265,6 +267,15 @@ Vagrant.configure("2") do |config|
             "vsftpd_hosts" => (allBoxes.select{|o| o.primaryService.name == "vsftpd"}.map{ |machine| machine[:hostname]}),
             "flask_hosts" => (allBoxes.select{|o| o.primaryService.name == "flask"}.map{ |machine| machine[:hostname]}),
             "samba_hosts" => (allBoxes.select{|o| o.primaryService.name == "samba"}.map{ |machine| machine[:hostname]})
+        }
+=end
+        ansible.groups = 
+        {
+            "wordpress_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname] }),
+            "sql_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname]}),
+            "vsftpd_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname]}),
+            "flask_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname]}),
+            "samba_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname]})
         }
     end
     

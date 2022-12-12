@@ -1,21 +1,65 @@
-#- name: Baseline
-#  hosts: all
-#  tasks:
-#  - 
-- name: Install Wordpress
-  hosts: wordpress_hosts
+- name: Baseline
+  hosts: all
+  become: yes
+  ignore_errors: yes
   tasks:
-  - command: "echo $(hostname) is running wordpress!"
+  - script: "scripts/baseline.sh"
 
 - name: Install SQL
   hosts: sql_hosts
   become: yes
   ignore_errors: yes
   tasks:
-  - command: "echo $(hostname) is running sql!"
   - script: "scripts/mysql.sh"
 
-- name: Install vsftpd
+- name: Install Vsftpd
   hosts: vsftpd_hosts
+  ignore_errors: yes
   tasks:
   - command: "echo $(hostname) is running vsftpd!"
+
+
+- hosts: samba_hosts
+  ignore_errors: yes
+  become: yes
+  tasks:
+  - name: Install Samba
+    script: "scripts/samba.sh"
+  - name: Add config
+    copy:
+      src: "templates/smb.conf"
+      dest: "/etc/samba/smb.conf"
+      mode: "0644"
+  - name: Restart Samba
+    script: "scripts/Samba/restart-samba.sh"
+    
+- name: Install Wordpress
+  become: yes
+  ignore_errors: yes
+  hosts: wordpress_hosts
+  environment:
+    DB_HOST: "{{ hostvars[item]['hostname'] }}"
+  with_items: "{{ groups['sql_hosts'] }}"
+  tasks:
+  - name: Move Wordpress config
+    template:
+      src: "templates/wp-config.php.j2"
+      dest: "/tmp/wp-config.php"
+      owner: root
+      group: root
+  - name: Run install
+    script: "scripts/Wordpress/wordpress.sh"
+
+
+- name: Install Flask
+  hosts: flask_hosts
+  ignore_errors: yes
+  tasks:
+  - command: "echo $(hostname) is running vsftpd!"
+
+- name: Clean up
+  hosts: all
+  become: yes
+  ignore_errors: yes
+  tasks:
+  - script: "scripts/clean.sh"
