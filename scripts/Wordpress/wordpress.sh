@@ -37,7 +37,6 @@ RHEL(){
     chmod +x /usr/local/bin/wp-cli
 
     mkdir /var/www/html/wordpress
-    chmod -R 777 /var/www/html/wordpress
     mv /tmp/wp-config.php /var/www/html/wordpress/
 
     cd /var/www/html/wordpress 
@@ -46,6 +45,7 @@ RHEL(){
     wp-cli core install --url=http://$IP/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
     chown -R apache /var/www/html/wordpress
     chgrp -R apache /var/www/html/wordpress
+    chmod -R 777 /var/www/html/wordpress
 }
 
 DEBIAN(){
@@ -59,7 +59,6 @@ DEBIAN(){
     chmod +x /usr/local/bin/wp-cli
 
     mkdir /var/www/html/wordpress
-    chmod -R 777 /var/www/html/wordpress
     mv /tmp/wp-config.php /var/www/html/wordpress/
 
     cd /var/www/html/wordpress 
@@ -68,17 +67,34 @@ DEBIAN(){
     wp-cli core install --url=http://$IP/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
     chown -R www-data /var/www/html/wordpress
     chgrp -R www-data /var/www/html/wordpress
+    chmod -R 777 /var/www/html/wordpress
 }
 
 UBUNTU(){
     DEBIAN
 }
 ALPINE(){
-    apk update >/dev/null
-    apk add apache2 curl php7-common php7-session php7-iconv php7-json php7-gd php7-curl php7-xml php7-mysqli php7-imap php7-cgi fcgi php7-pdo php7-pdo_mysql php7-soap php7-xmlrpc php7-posix php7-mcrypt php7-gettext php7-ldap php7-ctype php7-dom php7-simplexml >/dev/null
+    wget http://dl-cdn.alpinelinux.org/alpine/v3.16/main/x86_64/libcrypto3-3.0.7-r0.apk
+    apk add libcrypto3-3.0.7-r0.apk
+    rm libcrypto3-3.0.7-r0.apk
+    apk add --no-cache  --repository https://dl-cdn.alpinelinux.org/alpine/v3.13/community/ php7-apache2 php7-iconv php7 php7-json php7-cli php7-phar php7-mysqli php7-mysqlnd php7-pdo_mysql php7-common php7-curl apache2
+    
+    sed 's/\/var\/www\/localhost\/htdocs/\/var\/www\/localhost\/wordpress/' -i /etc/apache2/httpd.conf
+    service apache2 restart
 
-    apk add php$phpverx-apache2
+    curl -L https://github.com/wp-cli/wp-cli/releases/download/v2.5.0/wp-cli-2.5.0.phar -o /usr/local/bin/wp-cli
+    chmod +x /usr/local/bin/wp-cli
 
+    mkdir /var/www/localhost/wordpress
+    chmod -R 777 /var/www/localhost/wordpress
+    mv /tmp/wp-config.php /var/www/html/wordpress/
+
+    cd /var/www/localhost/wordpress 
+    wp-cli core download --allow-root
+    mysql -uroot -ppassword -e 'create database wordpress;' -h $DB_HOST
+    wp-cli core install --url=http://$IP/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
+    chown -R www-data /var/www/html/wordpress
+    chgrp -R www-data /var/www/html/wordpress
 }
 
 

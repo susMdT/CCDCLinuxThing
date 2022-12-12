@@ -25,7 +25,7 @@ UBUNTU(){
 }
 
 ALPINE(){
-    apk add mariadb mysql mysql-client
+    apk add mariadb mysql mysql-client mariadb-connector-c-dev
     /etc/init.d/mariadb setup
     service mariadb restart
     sed 's/#bind-/bind-/' -i /etc/my.cnf.d/mariadb-server.cnf
