@@ -6,10 +6,12 @@ RHEL(){
 
 DEBIAN(){
     echo Debian >/dev/null
+    apt update -y
 }
 
 UBUNTU(){
     echo Ubuntu >/dev/null
+    apt update -y
 }
 
 ALPINE(){

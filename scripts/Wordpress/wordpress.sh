@@ -1,6 +1,4 @@
-# Ansible Vars
-# IP => IP
-# DB_HOST => host with the database
+#!/bin/sh
 
 RHEL(){
     # php 7 and apache2
@@ -23,6 +21,7 @@ RHEL(){
     systemctl start php-fpm
     systemctl restart httpd
 
+    mkdir /var/www/html/wordpress/
     mkdir /etc/httpd/sites-available /etc/httpd/sites-enabled
     echo "IncludeOptional sites-enabled/*.conf" >> /etc/httpd/conf/httpd.conf
     echo "
@@ -36,13 +35,15 @@ RHEL(){
     curl -L https://github.com/wp-cli/wp-cli/releases/download/v2.5.0/wp-cli-2.5.0.phar -o /usr/local/bin/wp-cli
     chmod +x /usr/local/bin/wp-cli
 
-    mkdir /var/www/html/wordpress
     mv /tmp/wp-config.php /var/www/html/wordpress/
 
     cd /var/www/html/wordpress 
-    wp-cli core download --allow-root
-    mysql -uroot -ppassword -e 'create database wordpress;' -h $DB_HOST
-    wp-cli core install --url=http://$IP/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
+    /usr/local/bin/wp-cli core download --allow-root
+    #mysql -e 'create user "root"@"%" identified by "password";'
+    mysql -e 'update mysql.user set plugin="" where user="root" and host="localhost";'
+    mysql -e 'use mysql; alter user "root"@"localhost" identified by "password";'
+    mysql -uroot -ppassword -e 'create database wordpress;' -h 127.0.0.1
+    /usr/local/bin/wp-cli core install --url=http://localhost/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
     chown -R apache /var/www/html/wordpress
     chgrp -R apache /var/www/html/wordpress
     chmod -R 777 /var/www/html/wordpress
@@ -50,21 +51,25 @@ RHEL(){
 
 DEBIAN(){
     apt-get -qq update >/dev/null
-    apt-get -qq install curl apache2 libapache2-mod-php7.4 php7.4 php7.4-common php7.4-curl php7.4-dev php7.4-gd php7.4-mysql sed -y
-
+#    apt-get -qq install curl apache2 libapache2-mod-php7.4 php7.4 php7.4-common php7.4-curl php7.4-dev php7.4-gd php7.4-mysql sed -y
+    apt-get -qq install apache2 php php-mysql
+    mkdir /var/www/html/wordpress/
     sed 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/wordpress/' -i /etc/apache2/sites-enabled/000-default.conf
     systemctl restart apache2
 
     curl -L https://github.com/wp-cli/wp-cli/releases/download/v2.5.0/wp-cli-2.5.0.phar -o /usr/local/bin/wp-cli
     chmod +x /usr/local/bin/wp-cli
 
-    mkdir /var/www/html/wordpress
     mv /tmp/wp-config.php /var/www/html/wordpress/
 
     cd /var/www/html/wordpress 
     wp-cli core download --allow-root
-    mysql -uroot -ppassword -e 'create database wordpress;' -h $DB_HOST
-    wp-cli core install --url=http://$IP/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
+
+    #mysql -e 'create user "root"@"%" identified by "password";'
+    mysql -e 'update mysql.user set plugin="" where user="root" and host="localhost";' 
+    mysql -e 'use mysql; alter user "root"@"localhost" identified by "password";'
+    mysql -uroot -ppassword -e 'create database wordpress;' -h 127.0.0.1
+    wp-cli core install --url=http://localhost/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
     chown -R www-data /var/www/html/wordpress
     chgrp -R www-data /var/www/html/wordpress
     chmod -R 777 /var/www/html/wordpress
@@ -79,22 +84,24 @@ ALPINE(){
     rm libcrypto3-3.0.7-r0.apk
     apk add --no-cache  --repository https://dl-cdn.alpinelinux.org/alpine/v3.13/community/ php7-apache2 php7-iconv php7 php7-json php7-cli php7-phar php7-mysqli php7-mysqlnd php7-pdo_mysql php7-common php7-curl apache2
     
+    mkdir /var/www/localhost/wordpress
     sed 's/\/var\/www\/localhost\/htdocs/\/var\/www\/localhost\/wordpress/' -i /etc/apache2/httpd.conf
     service apache2 restart
 
     curl -L https://github.com/wp-cli/wp-cli/releases/download/v2.5.0/wp-cli-2.5.0.phar -o /usr/local/bin/wp-cli
     chmod +x /usr/local/bin/wp-cli
 
-    mkdir /var/www/localhost/wordpress
     chmod -R 777 /var/www/localhost/wordpress
-    mv /tmp/wp-config.php /var/www/html/wordpress/
+    mv /tmp/wp-config.php /var/www/localhost/wordpress/
 
     cd /var/www/localhost/wordpress 
-    wp-cli core download --allow-root
-    mysql -uroot -ppassword -e 'create database wordpress;' -h $DB_HOST
-    wp-cli core install --url=http://$IP/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
-    chown -R www-data /var/www/html/wordpress
-    chgrp -R www-data /var/www/html/wordpress
+    /usr/local/bin/wp-cli core download --allow-root
+    #mysql -e 'create user "root"@"%" identified by "password";'
+    mysql -e 'use mysql; alter user "root"@"localhost" identified by "password";'
+    mysql -uroot -ppassword -e 'create database wordpress;' -h 127.0.0.1
+    /usr/local/bin/wp-cli core install --url=http://localhost/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
+    chown -R apache /var/www/localhost/wordpress
+    chgrp -R apache /var/www/localhost/wordpress
 }
 
 

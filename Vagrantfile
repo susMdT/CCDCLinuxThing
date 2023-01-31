@@ -276,14 +276,8 @@ The actual inventory, I'm just stress testing
             "vsftpd_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname]}),
             "flask_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname]}),
             "samba_hosts" => (allBoxes.select{|o| o.primaryService.name != ""}.map{ |machine| machine[:hostname]}),
-            "Addresses" => 
-                {
-                    allBoxes[0].hostname => allBoxes[0].address,
-                    allBoxes[1].hostname => allBoxes[1].address,
-                    allBoxes[2].hostname => allBoxes[2].address,
-                    allBoxes[3].hostname => allBoxes[3].address
-                }
-        }
+            "all:vars" => {"bruh" => "what"}
+	}
     end
     
     # Allow password login

