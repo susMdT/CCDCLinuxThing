@@ -1,8 +1,8 @@
 +------------+----------------+
 |  Hostname  | Scored Service |
 +------------+----------------+
-|     ed     |      smb       |
-|   lazlo    |      http      |
 |   dexter   |      sql       |
-|  toonami   |      http      |
+|     ed     |      smb       |
+|   lazlo    |      ftp       |
+|  toonami   |      ftp       |
 +------------+----------------+

@@ -15,11 +15,11 @@ RHEL(){
 
     yum install php php-cli php-mysql php-fpm php-mysqlnd php-zip php-devel php-gd php-mcrypt php-mbstring php-curl php-xml php-pear php-bcmath php-json -y
     setsebool -P httpd_can_network_connect 1 # It's always fucking selinux
-
+    setenforce 0
+    sed -i 's/=enforcing/=disabled/' /etc/selinux/config
     systemctl restart httpd
     systemctl enable php-fpm
     systemctl start php-fpm
-    systemctl restart httpd
 
     mkdir /var/www/html/wordpress/
     mkdir /etc/httpd/sites-available /etc/httpd/sites-enabled
@@ -40,18 +40,19 @@ RHEL(){
     cd /var/www/html/wordpress 
     /usr/local/bin/wp-cli core download --allow-root
     #mysql -e 'create user "root"@"%" identified by "password";'
-    mysql -e 'update mysql.user set plugin="" where user="root" and host="localhost";'
-    mysql -e 'use mysql; alter user "root"@"localhost" identified by "password";'
-    mysql -uroot -ppassword -e 'create database wordpress;' -h 127.0.0.1
+    mysql -e 'create database wordpress;'
+    mysql -e 'use mysql; update user set password=password("password") where user="root"; flush privileges;'
+    sed -i 's/socket=\/.*//' /etc/my.cnf
+    systemctl restart mariadb
     /usr/local/bin/wp-cli core install --url=http://localhost/ --admin_user=admin --admin_password=admin --title=Wordpress --admin_email=admin@localhost.com --allow-root
     chown -R apache /var/www/html/wordpress
     chgrp -R apache /var/www/html/wordpress
     chmod -R 777 /var/www/html/wordpress
+    systemctl restart httpd
 }
 
 DEBIAN(){
     apt-get -qq update >/dev/null
-#    apt-get -qq install curl apache2 libapache2-mod-php7.4 php7.4 php7.4-common php7.4-curl php7.4-dev php7.4-gd php7.4-mysql sed -y
     apt-get -qq install apache2 php php-mysql
     mkdir /var/www/html/wordpress/
     sed 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/wordpress/' -i /etc/apache2/sites-enabled/000-default.conf
